@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title data-i18n="appTitle">Gestionnaire de chaine du froid</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header id="app-header">
+  <h1 data-i18n="appTitle">Gestionnaire de chaine du froid</h1>
+  <div id="language-switcher">
+    <button type="button" data-lang="fr">FR</button>
+    <button type="button" data-lang="en">EN</button>
+  </div>
+</header>
+
+<nav id="main-nav">
+  <button type="button" class="nav-btn" data-view="view-dashboard" data-i18n="navDashboard">Tableau de bord</button>
+  <button type="button" class="nav-btn" data-view="view-rooms" data-i18n="navRooms">Chambres froides</button>
+  <button type="button" class="nav-btn" data-view="view-storein" data-i18n="navStorage">Entree en stock</button>
+  <button type="button" class="nav-btn" data-view="view-release" data-i18n="navRelease">Sortie de stock</button>
+  <button type="button" class="nav-btn" data-view="view-temperature" data-i18n="navTemperature">Temperature</button>
+  <button type="button" class="nav-btn" data-view="view-customers" data-i18n="navCustomers">Clients</button>
+  <button type="button" class="nav-btn" data-view="view-csv" data-i18n="navCsv">Import/Export CSV</button>
+</nav>
+
+<main id="app-main">
+
+  <!-- ============================ Dashboard ============================ -->
+  <section id="view-dashboard" class="view active">
+    <h2 data-i18n="dashboard">Tableau de bord</h2>
+    <div id="dashboard-revenue" class="panel"></div>
+    <h3 data-i18n="utilization">Taux d occupation</h3>
+    <div id="dashboard-rooms" class="card-grid"></div>
+    <h3 data-i18n="alarms">Alarmes</h3>
+    <ul id="dashboard-alarms" class="alarm-list"></ul>
+    <h3 data-i18n="spoilageRisk">Risque de deperissement</h3>
+    <ul id="dashboard-spoilage" class="spoilage-list"></ul>
+  </section>
+
+  <!-- ========================= Raum-Verwaltung ========================= -->
+  <section id="view-rooms" class="view">
+    <h2 data-i18n="rooms">Chambres froides</h2>
+    <form id="room-form">
+      <div class="form-row">
+        <label for="room-name" data-i18n="name">Nom</label>
+        <input type="text" id="room-name" required>
+      </div>
+      <div class="form-row">
+        <label for="room-type" data-i18n="roomType">Type</label>
+        <select id="room-type" required>
+          <option value="solar" data-i18n="solar">Solaire</option>
+          <option value="netz" data-i18n="netz">Reseau</option>
+          <option value="hybrid" data-i18n="hybrid">Hybride</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label for="room-capacity" data-i18n="capacity">Capacite (caisses)</label>
+        <input type="number" id="room-capacity" min="1" step="1" required>
+      </div>
+      <div class="form-row">
+        <label for="room-soll-min" data-i18n="sollTempMin">Temp. min.</label>
+        <input type="number" id="room-soll-min" step="0.1" required>
+      </div>
+      <div class="form-row">
+        <label for="room-soll-max" data-i18n="sollTempMax">Temp. max.</label>
+        <input type="number" id="room-soll-max" step="0.1" required>
+      </div>
+      <button type="submit" data-i18n="save">Enregistrer</button>
+    </form>
+
+    <table id="rooms-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th data-i18n="name">Nom</th>
+          <th data-i18n="roomType">Type</th>
+          <th data-i18n="capacity">Capacite</th>
+          <th data-i18n="sollRange">Plage</th>
+        </tr>
+      </thead>
+      <tbody id="rooms-table-body"></tbody>
+    </table>
+
+    <h3 data-i18n="product">Produit</h3>
+    <form id="product-form">
+      <div class="form-row">
+        <label for="product-name-fr">Nom (FR)</label>
+        <input type="text" id="product-name-fr" required>
+      </div>
+      <div class="form-row">
+        <label for="product-name-en">Name (EN)</label>
+        <input type="text" id="product-name-en" required>
+      </div>
+      <div class="form-row">
+        <label for="product-perishability" data-i18n="perishability">Perissabilite</label>
+        <select id="product-perishability" required>
+          <option value="low" data-i18n="low">Faible</option>
+          <option value="medium" data-i18n="medium">Moyenne</option>
+          <option value="high" data-i18n="high">Elevee</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label for="product-max-days" data-i18n="maxStorageDays">Duree max. (jours)</label>
+        <input type="number" id="product-max-days" min="1" step="1">
+      </div>
+      <button type="submit" data-i18n="save">Enregistrer</button>
+    </form>
+  </section>
+
+  <!-- ========================= Einlagerung ========================= -->
+  <section id="view-storein" class="view">
+    <h2 data-i18n="storeIn">Entree en stock</h2>
+    <form id="storein-form">
+      <div class="form-row">
+        <label for="lot-room-id" data-i18n="room">Chambre froide</label>
+        <select id="lot-room-id" required></select>
+      </div>
+      <div class="form-row">
+        <label for="lot-customer-id" data-i18n="customer">Client</label>
+        <select id="lot-customer-id" required></select>
+      </div>
+      <div class="form-row">
+        <label for="lot-product-id" data-i18n="product">Produit</label>
+        <select id="lot-product-id" required></select>
+      </div>
+      <div class="form-row">
+        <label for="lot-crates" data-i18n="crates">Caisses</label>
+        <input type="number" id="lot-crates" min="1" step="1" required>
+      </div>
+      <div class="form-row">
+        <label for="lot-tarif" data-i18n="ratePerCrateDay">Tarif par caisse et par jour</label>
+        <input type="number" id="lot-tarif" min="0" step="1" required>
+      </div>
+      <div class="form-row">
+        <label for="lot-currency" data-i18n="currency">Devise</label>
+        <select id="lot-currency" required>
+          <option value="XOF">XOF</option>
+          <option value="NGN">NGN</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label for="lot-date" data-i18n="storedAt">Date d'entree</label>
+        <input type="date" id="lot-date">
+      </div>
+      <button type="submit" data-i18n="storeIn">Entree en stock</button>
+    </form>
+  </section>
+
+  <!-- ========================= Auslagerung ========================= -->
+  <section id="view-release" class="view">
+    <h2 data-i18n="release">Sortie de stock</h2>
+    <form id="release-form">
+      <div class="form-row">
+        <label for="release-lot-id">Lot</label>
+        <select id="release-lot-id" required></select>
+      </div>
+      <div class="form-row">
+        <label for="release-date" data-i18n="releasedAt">Date de sortie</label>
+        <input type="date" id="release-date">
+      </div>
+      <button type="submit" data-i18n="release">Sortie de stock</button>
+    </form>
+
+    <div id="receipt-panel">
+      <button type="button" id="btn-print-receipt" data-i18n="printReceipt">Imprimer le recu</button>
+      <div id="receipt-preview"></div>
+    </div>
+    <div id="ccm-receipt-root"></div>
+  </section>
+
+  <!-- ========================= Temperatur ========================= -->
+  <section id="view-temperature" class="view">
+    <h2 data-i18n="temperature">Temperature</h2>
+    <form id="temp-form">
+      <div class="form-row">
+        <label for="temp-room-id" data-i18n="room">Chambre froide</label>
+        <select id="temp-room-id" required></select>
+      </div>
+      <div class="form-row">
+        <label for="temp-value" data-i18n="temperature">Temperature (C)</label>
+        <input type="number" id="temp-value" step="0.1" required>
+      </div>
+      <div class="form-row">
+        <label for="temp-date" data-i18n="date">Date</label>
+        <input type="datetime-local" id="temp-date">
+      </div>
+      <div class="form-row">
+        <label for="temp-recorder" data-i18n="recordedBy">Releve par</label>
+        <input type="text" id="temp-recorder">
+      </div>
+      <button type="submit" data-i18n="recordTemp">Enregistrer la temperature</button>
+    </form>
+
+    <h3 data-i18n="tempHistory7d">Historique 7 jours</h3>
+    <div id="temperature-rooms" class="card-grid"></div>
+  </section>
+
+  <!-- ========================= Kunden ========================= -->
+  <section id="view-customers" class="view">
+    <h2 data-i18n="navCustomers">Clients</h2>
+    <form id="customer-form">
+      <div class="form-row">
+        <label for="customer-name" data-i18n="name">Nom</label>
+        <input type="text" id="customer-name" required>
+      </div>
+      <div class="form-row">
+        <label for="customer-type" data-i18n="customer">Type</label>
+        <select id="customer-type" required>
+          <option value="farmer" data-i18n="farmer">Agriculteur</option>
+          <option value="aggregator" data-i18n="aggregator">Agregateur</option>
+          <option value="haendler" data-i18n="haendler">Commercant</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label for="customer-phone" data-i18n="phone">Telephone</label>
+        <input type="text" id="customer-phone">
+      </div>
+      <button type="submit" data-i18n="save">Enregistrer</button>
+    </form>
+
+    <table id="customers-table">
+      <thead>
+        <tr>
+          <th data-i18n="name">Nom</th>
+          <th data-i18n="customer">Type</th>
+          <th data-i18n="phone">Telephone</th>
+          <th data-i18n="openBalance">Solde du</th>
+        </tr>
+      </thead>
+      <tbody id="customers-table-body"></tbody>
+    </table>
+
+    <h3 data-i18n="openItems">Postes ouverts</h3>
+    <div class="form-row">
+      <label for="openitems-customer-id" data-i18n="customer">Client</label>
+      <select id="openitems-customer-id"></select>
+    </div>
+    <ul id="openitems-list" class="openitems-list"></ul>
+  </section>
+
+  <!-- ========================= CSV ========================= -->
+  <section id="view-csv" class="view">
+    <h2 data-i18n="csvImportExport">Import/Export CSV</h2>
+    <div class="csv-panel">
+      <h3 data-i18n="rooms">Chambres froides</h3>
+      <button type="button" id="btn-export-rooms-csv" data-i18n="exportCsv">Exporter CSV</button>
+      <input type="file" id="rooms-csv-file" accept=".csv,text/csv">
+      <button type="button" id="btn-import-rooms-csv" data-i18n="importCsv">Importer CSV</button>
+      <p><code>lager_id, name, typ, kapazitaet_kisten, soll_temp_min, soll_temp_max</code></p>
+    </div>
+  </section>
+
+</main>
+
+<!--
+  Alle Module lokal per relativem Pfad ueber klassische <script>-Tags (kein
+  Bundler, kein CDN, keine externen Requests). Reihenfolge nach Abhaengigkeiten:
+  models/storage/i18n zuerst, dann fachliche Module, zuletzt app.js.
+-->
+<script src="js/models.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/fees.js"></script>
+<script src="js/capacity.js"></script>
+<script src="js/temperature.js"></script>
+<script src="js/perishability.js"></script>
+<script src="js/accounts.js"></script>
+<script src="js/receipt.js"></script>
+<script src="js/csv.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

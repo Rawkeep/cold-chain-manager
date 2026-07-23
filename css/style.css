@@ -1,0 +1,270 @@
+/*
+ * style.css
+ *
+ * Schlichtes Basislayout fuer die cold-chain-manager App-Shell (index.html).
+ * Keine externen Web-Fonts oder CDN-Ressourcen -- ausschliesslich lokale
+ * Styles. Enthaelt eine druckoptimierte @media print-Regel: beim Drucken
+ * ("Als PDF speichern") wird ausschliesslich der Belegbereich
+ * (#ccm-receipt-root, siehe js/receipt.js) sichtbar dargestellt.
+ */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #1a1a1a;
+  background-color: #eef2f5;
+}
+
+header#app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  background-color: #1f4e6b;
+  color: #ffffff;
+}
+
+header#app-header h1 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+#language-switcher button {
+  margin-left: 6px;
+  padding: 6px 12px;
+  border: 1px solid #ffffff;
+  background-color: transparent;
+  color: #ffffff;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+#language-switcher button.active-lang {
+  background-color: #ffffff;
+  color: #1f4e6b;
+  font-weight: bold;
+}
+
+nav#main-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 8px 20px;
+  background-color: #cfe0ea;
+}
+
+nav#main-nav .nav-btn {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 4px 4px 0 0;
+  background-color: #b6d0de;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+nav#main-nav .nav-btn:hover {
+  background-color: #9fc0d2;
+}
+
+nav#main-nav .nav-btn.active-nav {
+  background-color: #ffffff;
+  font-weight: bold;
+}
+
+main#app-main {
+  padding: 20px;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.view {
+  display: none;
+  background-color: #ffffff;
+  border: 1px solid #d3dde3;
+  border-radius: 6px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+}
+
+.view.active {
+  display: block;
+}
+
+.view h2 {
+  margin-top: 0;
+  color: #1f4e6b;
+}
+
+.view h3 {
+  color: #1f4e6b;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+  max-width: 360px;
+}
+
+.form-row label {
+  font-size: 0.85rem;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+
+.form-row input,
+.form-row select {
+  padding: 6px 8px;
+  border: 1px solid #b8c2c8;
+  border-radius: 4px;
+  font-size: 0.95rem;
+}
+
+button[type='submit'],
+button[type='button'] {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  background-color: #1f4e6b;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 0.95rem;
+  margin-top: 8px;
+}
+
+button[type='submit']:hover,
+button[type='button']:hover {
+  background-color: #163a50;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+}
+
+table th,
+table td {
+  text-align: left;
+  padding: 6px 10px;
+  border-bottom: 1px solid #e2e8ec;
+}
+
+table th {
+  background-color: #eef3f6;
+}
+
+/* Karten-Raster (Dashboard / Temperatur) */
+.card-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.room-card {
+  border: 1px solid #d3dde3;
+  border-radius: 6px;
+  padding: 12px;
+  min-width: 220px;
+  background-color: #fafcfd;
+}
+
+/* Alarm bei Soll-Verletzung: rote Kachel (Akzeptanzkriterium 3) */
+.room-card-alarm {
+  border-color: #c0392b;
+  background-color: #fbeae8;
+}
+
+.room-card h3 {
+  margin: 0 0 6px 0;
+  font-size: 1rem;
+}
+
+.sparkline-wrap {
+  margin-top: 8px;
+}
+
+.ccm-sparkline {
+  border: 1px solid #e2e8ec;
+  background-color: #ffffff;
+}
+
+.panel {
+  background-color: #eef3f6;
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  font-weight: bold;
+}
+
+.alarm-list,
+.spoilage-list,
+.openitems-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.alarm-item {
+  color: #c0392b;
+  font-weight: bold;
+  padding: 4px 0;
+}
+
+.spoilage-item {
+  color: #b9770e;
+  padding: 4px 0;
+}
+
+.openitem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0;
+}
+
+.openitem .pay-btn {
+  margin-top: 0;
+  padding: 4px 10px;
+}
+
+.csv-panel {
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e2e8ec;
+}
+
+.csv-panel input[type='file'] {
+  margin: 8px 0;
+}
+
+#receipt-preview {
+  margin-top: 12px;
+  border: 1px solid #e2e8ec;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+/*
+ * Druckoptimierung: beim Drucken nur den Beleg (#ccm-receipt-root) zeigen.
+ * Die eigentliche Sichtbarkeitssteuerung steht inline im Beleg-Fragment
+ * (js/receipt.js); hier wird der App-Rahmen zusaetzlich ausgeblendet.
+ */
+@media print {
+  header#app-header,
+  nav#main-nav,
+  #language-switcher,
+  .view,
+  #receipt-panel > button {
+    display: none !important;
+  }
+
+  #ccm-receipt-root {
+    display: block !important;
+    width: 100%;
+  }
+}
