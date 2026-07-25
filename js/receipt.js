@@ -8,11 +8,27 @@
  * Browser-Druckdialog via window.print(). Beschriftungen sind FR/EN ueber
  * js/i18n.js (CCMI18n). Der Auslagerbeleg enthaelt Beleg-Nr., Kisten, Tage und
  * Betrag.
+ *
+ * HTML-Escaping, Geldformatierung und der DOM-/window.print()-Mechanismus
+ * sind generisch und leben jetzt geteilt in js/shared/offline-kit.js
+ * (OfflineKit.receipt) -- identisch in fuenf weiteren Rawkeep-Offline-Apps.
+ * Diese Datei enthaelt nur noch das App-spezifische Beleg-Layout (HTML/CSS
+ * fuer Ein-/Auslagerung).
  */
 (function (global) {
   'use strict';
 
   var RECEIPT_ROOT_ID = 'ccm-receipt-root';
+
+  function resolveOfflineKit() {
+    if (global.OfflineKit) {
+      return global.OfflineKit;
+    }
+    if (typeof require === 'function') {
+      return require('./shared/offline-kit.js');
+    }
+    throw new Error('OfflineKit (js/shared/offline-kit.js) ist nicht verfuegbar.');
+  }
 
   function resolveI18n() {
     if (global.CCMI18n) {
@@ -24,24 +40,9 @@
     throw new Error('CCMI18n (js/i18n.js) ist nicht verfuegbar.');
   }
 
-  function escapeHtml(value) {
-    var str = value === undefined || value === null ? '' : String(value);
-    return str
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;');
-  }
-
-  /**
-   * Formatiert einen Geldbetrag (Integer, kleinste Waehrungseinheit) fuer die
-   * Anzeige. Reine Integer-/String-Operationen, kein parseFloat, kein toFixed.
-   */
-  function formatMoney(amount, currency) {
-    var safeAmount = Number.isInteger(amount) ? amount : 0;
-    return String(safeAmount) + ' ' + String(currency || '');
-  }
+  var OfflineKit = resolveOfflineKit();
+  var escapeHtml = OfflineKit.receipt.escapeHtml;
+  var formatMoney = OfflineKit.receipt.formatMoney;
 
   function receiptStyle() {
     return (
@@ -131,29 +132,11 @@
     );
   }
 
-  function ensureRoot(doc) {
-    var root = doc.getElementById(RECEIPT_ROOT_ID);
-    if (!root) {
-      root = doc.createElement('div');
-      root.id = RECEIPT_ROOT_ID;
-      doc.body.appendChild(root);
-    }
-    return root;
-  }
-
   /**
    * Rendert ein Beleg-HTML-Fragment in den DOM und startet window.print().
    */
   function printReceiptHtml(html) {
-    if (typeof global.document === 'undefined') {
-      throw new Error('printReceiptHtml benoetigt eine Browser-Umgebung mit document.');
-    }
-    var root = ensureRoot(global.document);
-    root.innerHTML = html;
-    if (typeof window !== 'undefined' && typeof window.print === 'function') {
-      window.print();
-    }
-    return root;
+    return OfflineKit.receipt.printReceipt(RECEIPT_ROOT_ID, html);
   }
 
   var CCMReceipt = {

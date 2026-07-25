@@ -6,9 +6,26 @@
  * t(key, lang) und Sprachumschaltung setLanguage/getLanguage mit Persistenz in
  * localStorage. Jeder Begriff besitzt sowohl einen fr- als auch einen
  * en-Eintrag. Keine externen Requests, keine externen i18n-Bibliotheken.
+ *
+ * Die generische Engine (t/setLanguage/getLanguage, localStorage-Persistenz)
+ * lebt jetzt geteilt in js/shared/offline-kit.js (OfflineKit.createI18n) --
+ * identisch in fuenf weiteren Rawkeep-Offline-Apps. Diese Datei enthaelt nur
+ * noch das App-spezifische Woerterbuch und die Sprachkonfiguration.
  */
 (function (global) {
   'use strict';
+
+  function resolveOfflineKit() {
+    if (global.OfflineKit) {
+      return global.OfflineKit;
+    }
+    if (typeof require === 'function') {
+      return require('./shared/offline-kit.js');
+    }
+    throw new Error('OfflineKit (js/shared/offline-kit.js) ist nicht verfuegbar.');
+  }
+
+  var OfflineKit = resolveOfflineKit();
 
   var LANGUAGE_STORAGE_KEY = 'cold_chain_manager_lang';
   var SUPPORTED_LANGUAGES = ['fr', 'en'];
@@ -109,56 +126,12 @@
     name: { fr: 'Nom', en: 'Name' }
   };
 
-  function isSupportedLanguage(lang) {
-    return SUPPORTED_LANGUAGES.indexOf(lang) !== -1;
-  }
-
-  function hasLocalStorage() {
-    return typeof global.localStorage !== 'undefined' && global.localStorage !== null;
-  }
-
-  /**
-   * Uebersetzt einen Schluessel in die angegebene Sprache. Fehlt die Sprache,
-   * wird die aktuell gesetzte verwendet. Fehlt der Schluessel, wird der
-   * Schluessel selbst zurueckgegeben.
-   */
-  function t(key, lang) {
-    var targetLang = isSupportedLanguage(lang) ? lang : getLanguage();
-    var entry = TRANSLATIONS[key];
-    if (!entry) {
-      return key;
-    }
-    return entry[targetLang] || entry[DEFAULT_LANGUAGE] || key;
-  }
-
-  function setLanguage(lang) {
-    if (!isSupportedLanguage(lang)) {
-      throw new Error('Nicht unterstuetzte Sprache: ' + lang + ' (erlaubt: fr, en).');
-    }
-    if (hasLocalStorage()) {
-      global.localStorage.setItem(LANGUAGE_STORAGE_KEY, lang);
-    }
-    return lang;
-  }
-
-  function getLanguage() {
-    if (hasLocalStorage()) {
-      var stored = global.localStorage.getItem(LANGUAGE_STORAGE_KEY);
-      if (isSupportedLanguage(stored)) {
-        return stored;
-      }
-    }
-    return DEFAULT_LANGUAGE;
-  }
-
-  var CCMI18n = {
-    SUPPORTED_LANGUAGES: SUPPORTED_LANGUAGES,
-    DEFAULT_LANGUAGE: DEFAULT_LANGUAGE,
-    TRANSLATIONS: TRANSLATIONS,
-    t: t,
-    setLanguage: setLanguage,
-    getLanguage: getLanguage
-  };
+  var CCMI18n = OfflineKit.createI18n({
+    languageStorageKey: LANGUAGE_STORAGE_KEY,
+    supportedLanguages: SUPPORTED_LANGUAGES,
+    defaultLanguage: DEFAULT_LANGUAGE,
+    translations: TRANSLATIONS
+  });
 
   global.CCMI18n = CCMI18n;
 

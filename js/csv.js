@@ -5,13 +5,25 @@
  * Spalten (exakte Reihenfolge, siehe ROOM_CSV_COLUMNS):
  *   lager_id, name, typ, kapazitaet_kisten, soll_temp_min, soll_temp_max
  *
- * CSV-Escaping (Kommas, Anfuehrungszeichen, Zeilenumbrueche) wird ohne externe
- * Bibliotheken nach RFC4180-Prinzip selbst implementiert. Export gefolgt von
- * Import ergibt bei identischen Rohdaten identische Datensaetze. Keine externen
- * Requests, keine externen Bibliotheken.
+ * Das generische CSV-Escaping/-Parsing (RFC4180-Prinzip, ohne externe
+ * Bibliotheken) lebt jetzt geteilt in js/shared/offline-kit.js
+ * (OfflineKit.csv) -- identisch in fuenf weiteren Rawkeep-Offline-Apps.
+ * Diese Datei enthaelt nur noch das App-spezifische: Spaltenliste,
+ * Konvertierung von/zu CCMModels.createRoom, Persistenz ueber CCMStorage.
+ * Keine externen Requests, keine externen Bibliotheken.
  */
 (function (global) {
   'use strict';
+
+  function resolveOfflineKit() {
+    if (global.OfflineKit) {
+      return global.OfflineKit;
+    }
+    if (typeof require === 'function') {
+      return require('./shared/offline-kit.js');
+    }
+    throw new Error('OfflineKit (js/shared/offline-kit.js) ist nicht verfuegbar.');
+  }
 
   function resolveModels() {
     if (global.CCMModels) {
@@ -33,6 +45,13 @@
     throw new Error('CCMStorage (js/storage.js) ist nicht verfuegbar.');
   }
 
+  var OfflineKit = resolveOfflineKit();
+  var csvEscapeField = OfflineKit.csv.csvEscapeField;
+  var toCsvRow = OfflineKit.csv.toCsvRow;
+  var buildCsv = OfflineKit.csv.buildCsv;
+  var parseCsv = OfflineKit.csv.parseCsv;
+  var dataRowsOf = OfflineKit.csv.dataRowsOf;
+
   // Exakte Spaltenreihenfolge fuer den Raum-Export/-Import (siehe Auftrag).
   var ROOM_CSV_COLUMNS = [
     'lager_id',
@@ -42,106 +61,6 @@
     'soll_temp_min',
     'soll_temp_max'
   ];
-
-  var CSV_LINE_BREAK = '\r\n';
-
-  /**
-   * Escaped ein einzelnes CSV-Feld nach RFC4180-Prinzip.
-   */
-  function csvEscapeField(value) {
-    var str = value === undefined || value === null ? '' : String(value);
-    var needsQuoting = /[",\n\r]/.test(str);
-    if (!needsQuoting) {
-      return str;
-    }
-    return '"' + str.replace(/"/g, '""') + '"';
-  }
-
-  function toCsvRow(fields) {
-    return fields.map(csvEscapeField).join(',');
-  }
-
-  function buildCsv(headerColumns, rows) {
-    var lines = [toCsvRow(headerColumns)];
-    rows.forEach(function (row) {
-      lines.push(toCsvRow(row));
-    });
-    return lines.join(CSV_LINE_BREAK);
-  }
-
-  /**
-   * Parst einen vollstaendigen CSV-Text in ein Array von Zeilen (jede Zeile
-   * ein Array von Rohfeld-Strings), ohne externe Bibliotheken. Unterstuetzt
-   * gequotete Felder mit eingebetteten Kommas, Zeilenumbruechen und
-   * verdoppelten Anfuehrungszeichen.
-   */
-  function parseCsv(text) {
-    var rows = [];
-    var row = [];
-    var field = '';
-    var inQuotes = false;
-    var str = typeof text === 'string' ? text : '';
-    var len = str.length;
-    var i = 0;
-
-    while (i < len) {
-      var ch = str.charAt(i);
-
-      if (inQuotes) {
-        if (ch === '"') {
-          if (str.charAt(i + 1) === '"') {
-            field += '"';
-            i += 2;
-          } else {
-            inQuotes = false;
-            i += 1;
-          }
-        } else {
-          field += ch;
-          i += 1;
-        }
-        continue;
-      }
-
-      if (ch === '"') {
-        inQuotes = true;
-        i += 1;
-      } else if (ch === ',') {
-        row.push(field);
-        field = '';
-        i += 1;
-      } else if (ch === '\r' || ch === '\n') {
-        row.push(field);
-        rows.push(row);
-        row = [];
-        field = '';
-        if (ch === '\r' && str.charAt(i + 1) === '\n') {
-          i += 2;
-        } else {
-          i += 1;
-        }
-      } else {
-        field += ch;
-        i += 1;
-      }
-    }
-
-    if (field.length > 0 || row.length > 0) {
-      row.push(field);
-      rows.push(row);
-    }
-
-    return rows;
-  }
-
-  function dataRowsOf(rows) {
-    if (rows.length === 0) {
-      return [];
-    }
-    return rows.slice(1).filter(function (r) {
-      return !(r.length === 1 && r[0] === '');
-    });
-  }
 
   function toIntOr(rawValue, fallback) {
     if (rawValue === undefined || rawValue === null || String(rawValue).trim() === '') {
